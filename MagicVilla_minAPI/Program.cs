@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Net;
+using AutoMapper;
 using FluentValidation;
 using MagicVilla_minAPI;
 using MagicVilla_minAPI.Data;
@@ -26,9 +27,14 @@ if (app.Environment.IsDevelopment())
 
 
 app.MapGet("/api/coupon", (ILogger<Program> _logger) => {
+    APIResponse response = new();
     _logger.Log(LogLevel.Information, "Getting all Coupons");
-    return Results.Ok(CouponStore.couponList);
-}).WithName("GetCoupons").Produces<IEnumerable<Coupon>>(200);
+    response.Result = CouponStore.couponList;
+    response.IsSuccess = true;
+    response.StatusCode = HttpStatusCode.OK;
+
+    return Results.Ok(response);
+}).WithName("GetCoupons").Produces<APIResponse>(200);
 
 
 app.MapGet("/api/coupon/{id:int}", (int id) => {
@@ -36,9 +42,9 @@ app.MapGet("/api/coupon/{id:int}", (int id) => {
 }).WithName("GetCoupon").Produces<Coupon>(200);
 
 
-app.MapPost("api/coupon",  (IMapper _mapper, IValidator <CouponCreateDTO> _validation, [FromBody] CouponCreateDTO coupon_C_DTO) =>
+app.MapPost("api/coupon", async (IMapper _mapper, IValidator <CouponCreateDTO> _validation, [FromBody] CouponCreateDTO coupon_C_DTO) =>
 {
-    var validationResult = _validation.ValidateAsync(coupon_C_DTO).GetAwaiter().GetResult();
+    var validationResult = await _validation.ValidateAsync(coupon_C_DTO);
     if ( !validationResult.IsValid)
     {
         return Results.BadRequest(validationResult.Errors.FirstOrDefault().ToString());
