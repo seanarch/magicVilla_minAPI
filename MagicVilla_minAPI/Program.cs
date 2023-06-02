@@ -66,10 +66,9 @@ app.MapPost("api/coupon", async (IMapper _mapper, IValidator <CouponCreateDTO> _
     Coupon coupon = _mapper.Map<Coupon>(coupon_C_DTO);
 
     coupon.Id = CouponStore.couponList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
-    CouponStore.couponList.Add(coupon);
+    CouponStore.couponList.Add(coupon); 
     CouponDTO couponDTO = _mapper.Map<CouponDTO>(coupon);
-    
-
+   
     response.Result = couponDTO;
     response.IsSuccess = true;
     response.StatusCode = HttpStatusCode.Created;
@@ -78,15 +77,34 @@ app.MapPost("api/coupon", async (IMapper _mapper, IValidator <CouponCreateDTO> _
     //return Results.Created($"/api/coupon/{coupon.Id}", coupon);
 }).WithName("CreateCoupon").Accepts<CouponCreateDTO>("application/json").Produces<APIResponse>(201).Produces(400);
 
-app.MapPut("api/coupon", () =>
+app.MapPut("api/coupon/{id:int}", async (IMapper _mapper, IValidator < CouponUpdateDTO > _validation, [FromBody] CouponUpdateDTO coupon_U_DTO, int id) =>
 {
+    APIResponse response = new() { IsSuccess = false, StatusCode = HttpStatusCode.BadRequest};
 
-});
+    var validationResult = await _validation.ValidateAsync(coupon_U_DTO);
+    if(!validationResult.IsValid)
+    {
+        response.ErrorMessages.Add(validationResult.Errors.FirstOrDefault().ToString());
+        return Results.BadRequest(response);
+    }
 
-app.MapDelete("api/coupon/{id:int}", (int id) =>
+    Coupon couponFromStore = CouponStore.couponList.FirstOrDefault(u => u.Id == coupon_U_DTO.Id);
+    couponFromStore.IsActive = coupon_U_DTO.IsActive;
+    couponFromStore.Name = coupon_U_DTO.Name;
+    couponFromStore.Percent = coupon_U_DTO.Percent;
+    couponFromStore.LastUpdated = DateTime.Now;
+     
+    response.Result = _mapper.Map<CouponDTO>(couponFromStore);
+    response.IsSuccess = true;
+    response.StatusCode = HttpStatusCode.OK;
+    return Results.Ok(response);
+
+}).WithName("UpdateCoupon").Accepts<CouponUpdateDTO>("application/json").Produces<APIResponse>(200);
+
+app.MapDelete("api/coupon/{id:int}", async (IValidator < CouponCreateDTO > _validation, [FromBody] CouponDTO coupon_DTO, int id) =>
 {
-
-});
+ 
+}).WithName("DeleteCoupon").Produces<APIResponse>(204);
 
 app.UseHttpsRedirection();
 
