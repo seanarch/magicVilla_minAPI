@@ -77,7 +77,7 @@ app.MapPost("api/coupon", async (IMapper _mapper, IValidator <CouponCreateDTO> _
     //return Results.Created($"/api/coupon/{coupon.Id}", coupon);
 }).WithName("CreateCoupon").Accepts<CouponCreateDTO>("application/json").Produces<APIResponse>(201).Produces(400);
 
-app.MapPut("api/coupon/{id:int}", async (IMapper _mapper, IValidator < CouponUpdateDTO > _validation, [FromBody] CouponUpdateDTO coupon_U_DTO, int id) =>
+app.MapPut("api/coupon/", async (IMapper _mapper, IValidator < CouponUpdateDTO > _validation, [FromBody] CouponUpdateDTO coupon_U_DTO) =>
 {
     APIResponse response = new() { IsSuccess = false, StatusCode = HttpStatusCode.BadRequest};
 
@@ -103,8 +103,22 @@ app.MapPut("api/coupon/{id:int}", async (IMapper _mapper, IValidator < CouponUpd
 
 app.MapDelete("api/coupon/{id:int}", async (IValidator < CouponCreateDTO > _validation, [FromBody] CouponDTO coupon_DTO, int id) =>
 {
- 
-}).WithName("DeleteCoupon").Produces<APIResponse>(204);
+    APIResponse response = new() { IsSuccess = false, StatusCode = HttpStatusCode.BadRequest };
+
+    Coupon couponFromStore = CouponStore.couponList.FirstOrDefault(u => u.Id == id);
+    if (couponFromStore != null)
+    {
+        CouponStore.couponList.Remove(couponFromStore);
+        response.IsSuccess = true;
+        response.StatusCode = HttpStatusCode.NoContent;
+        return Results.Ok(response); 
+    }
+    else
+    {
+        response.ErrorMessages.Add("Invalid Id");
+        return Results.BadRequest(response);
+    } 
+});
 
 app.UseHttpsRedirection();
 
