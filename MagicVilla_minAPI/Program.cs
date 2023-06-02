@@ -1,4 +1,7 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿
+using MagicVilla_minAPI.Data;
+
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -14,11 +17,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/helloworld/{id:int}", (int id) => {
-    return Results.Ok("Id!!!" + id);
-});
-app.MapPost("/helloworld2", () => Results.Ok("Hello World2"));
-
+app.MapGet("/api/coupon", () => Results.Ok(CouponStore.couponList));
 
 app.UseHttpsRedirection();
 
